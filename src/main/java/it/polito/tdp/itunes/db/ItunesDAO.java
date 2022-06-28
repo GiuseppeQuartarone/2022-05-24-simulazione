@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Artist;
 import it.polito.tdp.itunes.model.Genre;
@@ -139,6 +141,82 @@ public class ItunesDAO {
 		return result;
 	}
 
+	public List<Track> getVertici(Genre g,Map<Integer,Track> idMap){
+		String sql = "SELECT * "
+				+ "FROM track "
+				+ "WHERE track.`GenreId` = ? ";
+		List<Track> result = new ArrayList<Track>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, g.getGenreId());
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				if(idMap.containsKey(res.getInt("TrackID")))
+				result.add(idMap.get(res.getInt("TrackID")));
+			
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+		
+	}
 	
+	public void riempiMappa(Map<Integer,Track> idMap) {
+		String sql = "SELECT * FROM Track";
+		
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				if(!idMap.containsKey(res.getInt("TrackID"))) {
+					Track t = new Track(res.getInt("TrackId"), res.getString("Name"), 
+							res.getString("Composer"), res.getInt("Milliseconds"), 
+							res.getInt("Bytes"),res.getDouble("UnitPrice"));
+					idMap.put(t.getTrackId(), t);
+				}
+			
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		
+	}
 	
-}
+	public List<Adiacenza> getAdiacenza(Genre g, Map<Integer,Track> idMap){
+		String sql = "SELECT ABS(t1.`Milliseconds` - t2.`Milliseconds`) as differenza, t1.`TrackId` as t1, t2.`TrackId` as t2 "
+				+ "FROM Track t1, track t2 "
+				+ "WHERE t1.`MediaTypeId` = t2.`MediaTypeId` AND t1.`TrackId` > t2.`TrackId` AND t1.`GenreId` = ? and t1.`GenreId` = t2.`GenreId`  ";
+		List<Adiacenza> result = new ArrayList<Adiacenza>();
+		Connection conn = DBConnect.getConnection();
+		
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, g.getGenreId());
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+				if(idMap.containsKey(res.getInt("t1")) && idMap.containsKey(res.getInt("t2"))) {
+					result.add(new Adiacenza(idMap.get(res.getInt("t1")), idMap.get(res.getInt("t2")), res.getDouble("differenza")));
+				}
+			}
+			
+			conn.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	}
+	
+

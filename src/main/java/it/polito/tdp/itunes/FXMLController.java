@@ -6,7 +6,10 @@ package it.polito.tdp.itunes;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.Model;
+import it.polito.tdp.itunes.model.Track;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -34,10 +37,10 @@ public class FXMLController {
     private Button btnMassimo; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbCanzone"
-    private ComboBox<?> cmbCanzone; // Value injected by FXMLLoader
+    private ComboBox<Track> cmbCanzone; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbGenere"
-    private ComboBox<?> cmbGenere; // Value injected by FXMLLoader
+    private ComboBox<Genre> cmbGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtMemoria"
     private TextField txtMemoria; // Value injected by FXMLLoader
@@ -52,12 +55,16 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	this.txtResult.clear();
+    	
+    	this.model.creaGrafo(this.cmbGenere.getValue());
+    	this.txtResult.setText("#vertici :"+this.model.nVertici() +"\n#archi :"+this.model.nArchi());
 
     }
 
     @FXML
     void doDeltaMassimo(ActionEvent event) {
-    	
+    	this.txtResult.appendText("\n Delta massimo : \n"+this.model.getDurataMassima().toString());
     	
     }
 
@@ -75,6 +82,8 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
+    	this.cmbGenere.getItems().addAll(this.model.getGeneri());
     }
 
 }
